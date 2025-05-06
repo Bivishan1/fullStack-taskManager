@@ -1,15 +1,15 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const mysql = require("mysql2/promise");
+require("dotenv").config();
 
 // Create connection pool
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_NAME || 'taskmanager',
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "password",
+  database: process.env.DB_NAME || "taskmanager",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // Create the tasks table if it doesn't exist
@@ -24,13 +24,14 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log('Database initialized successfully');
+    console.log("Database initialized successfully");
   } catch (err) {
-    console.error('Error initializing database:', err);
+    console.error("Error initializing database:", err);
   }
 };
 
 // Initialize DB when this module is imported
 initDb();
 
+// Make sure we're exporting the pool object
 module.exports = pool;

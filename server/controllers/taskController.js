@@ -1,13 +1,22 @@
-import { query } from '../db';
+// Make sure to use a direct relative path to your db.js file
+const pool = require('../db');
+
+// Add a verification check to debug the connection
+console.log('Pool connection:', pool ? 'Connected' : 'Not connected');
 
 // Get all tasks
 const getAllTasks = async (req, res) => {
   try {
-    const [rows] = await query('SELECT * FROM tasks ORDER BY created_at DESC');
+    // Verify pool exists before trying to use it
+    if (!pool) {
+      throw new Error('Database connection pool is not initialized');
+    }
+    
+    const [rows] = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
     res.json(rows);
   } catch (err) {
     console.error('Error getting tasks:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };
 
@@ -21,13 +30,13 @@ const createTask = async (req, res) => {
   }
 
   try {
-    const [result] = await query(
+    const [result] = await pool.query(
       'INSERT INTO tasks (title, description) VALUES (?, ?)',
       [title, description || '']
     );
     
     // Get the newly created task
-    const [rows] = await query('SELECT * FROM tasks WHERE id = ?', [result.insertId]);
+    const [rows] = await pool.query('SELECT * FROM tasks WHERE id = ?', [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating task:', err);
@@ -40,7 +49,7 @@ const completeTask = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [result] = await query(
+    const [result] = await pool.query(
       'UPDATE tasks SET is_completed = TRUE WHERE id = ?',
       [id]
     );
@@ -50,7 +59,7 @@ const completeTask = async (req, res) => {
     }
     
     // Get the updated task
-    const [rows] = await query('SELECT * FROM tasks WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM tasks WHERE id = ?', [id]);
     res.json(rows[0]);
   } catch (err) {
     console.error('Error completing task:', err);
@@ -63,7 +72,7 @@ const deleteTask = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [result] = await query(
+    const [result] = await pool.query(
       'DELETE FROM tasks WHERE id = ?',
       [id]
     );
@@ -79,7 +88,7 @@ const deleteTask = async (req, res) => {
   }
 };
 
-export default {
+module.exports = {
   getAllTasks,
   createTask,
   completeTask,
